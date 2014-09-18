@@ -79,7 +79,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h2>Step 1: Read data and merge them</h2>
 <div id="set-working-directory" class="section level3">
 <h3>Set Working Directory</h3>
-<pre class="r"><code>setwd(&quot;/users/MacBookAir/Movies/coursera/03 Getting and cleaning data/Course project/03-getting-cleaning-data/&quot;)</code></pre>
+<pre class="r"><code>setwd(&quot;/users/MacBookAir/Movies/coursera/03 Getting and cleaning data/Course project/UCI HAR Dataset/&quot;)</code></pre>
 </div>
 <div id="read-x-and-y-variables-for-training-and-testing" class="section level3">
 <h3>Read x and y variables for Training and Testing</h3>
@@ -159,9 +159,49 @@ for(a in 1:6){
 </div>
 <div id="step-4-appropriately-labels-the-data-set-with-descriptive-variable-names." class="section level2">
 <h2>Step 4: Appropriately labels the data set with descriptive variable names.</h2>
+<p>Read subject numbers from training and testing dataset</p>
+<pre class="r"><code>subjectTrain&lt;-read.table(&quot;./train/subject_train.txt&quot;)
+subjectTest&lt;-read.table(&quot;./test/subject_test.txt&quot;)</code></pre>
+<p>Merge these to single variable</p>
+<pre class="r"><code>subject&lt;-rbind(subjectTrain,subjectTest)</code></pre>
+<p>Now change the number to labels like Subject1, Subject2…</p>
+<pre class="r"><code>subject[,1]&lt;-paste(&quot;Subject-&quot;,as.character(subject[,1]),sep=&quot;&quot;)
+#rename column name to subjectname
+names(subject)&lt;-&quot;subjectname&quot;</code></pre>
+<p>Merge all these data to one variable named data</p>
+<pre class="r"><code>data&lt;-cbind(subject,yLabels,reducedx)
+#Rename names of column 1 and 2
+names(data[1:2])&lt;-c(&quot;subjectname&quot;,&quot;activity&quot;)</code></pre>
 </div>
 <div id="step-5-from-the-data-set-in-step-4-creates-a-second-independent-tidy-data-set-with-the-average-of-each-variable-for-each-activity-and-each-subject." class="section level2">
 <h2>Step 5: From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.</h2>
+<p>Change the subjectname to factor variable so that we can use tapply function to find mean of factors</p>
+<pre class="r"><code>data$subjectname&lt;-as.factor(data$subjectname)</code></pre>
+<p>Finding Mean</p>
+<pre class="r"><code>#tapply(data,data$subjectname,mean)
+#tapply seems to work with only one column
+#newdata&lt;-0
+#for(name in unique(data$name)){
+#    rowIndex&lt;-which(data$subjectname == name)
+#    result&lt;-colMeans(data[,rowIndex])
+#    newdata[name,]&lt;-result
+#    newdata
+#}
+library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: 'dplyr'
+## 
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+## 
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>newdata&lt;-data %&gt;% group_by(subjectname) %&gt;% summarise_each(funs(mean))
+
+#now write this data to a file
+write.table(newdata,file=&quot;meandata_subject.txt&quot;,row.name=FALSE)</code></pre>
 </div>
 </div>
 
