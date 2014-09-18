@@ -160,4 +160,7 @@ Finding Mean
 #}
 library(dplyr)
 newdata<-data %>% group_by(subjectname) %>% summarise_each(funs(mean))
+
+#now write this data to a file
+write.table(newdata,file="meandata_subject.txt",row.name=FALSE)
 ```
