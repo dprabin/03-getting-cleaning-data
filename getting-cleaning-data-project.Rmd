@@ -24,7 +24,7 @@ Here are the data for the project: <https://d396qusza40orc.cloudfront.net/getdat
 
 ###Set Working Directory 
 ```{r setworkingdirectory}
-setwd("/users/MacBookAir/Movies/coursera/03 Getting and cleaning data/Course project/03-getting-cleaning-data/")
+setwd("/users/MacBookAir/Movies/coursera/03 Getting and cleaning data/Course project/UCI HAR Dataset/")
 ```
 
 ###Read x and y variables for Training and Testing 
@@ -114,4 +114,50 @@ for(a in 1:6){
 
 ##Step 4: Appropriately labels the data set with descriptive variable names. 
 
+Read subject numbers from training and testing dataset
+```{r}
+subjectTrain<-read.table("./train/subject_train.txt")
+subjectTest<-read.table("./test/subject_test.txt")
+```
+
+Merge these to single variable
+```{r}
+subject<-rbind(subjectTrain,subjectTest)
+```
+
+Now change the number to labels like Subject1, Subject2...
+```{r}
+subject[,1]<-paste("Subject-",as.character(subject[,1]),sep="")
+#rename column name to subjectname
+names(subject)<-"subjectname"
+```
+
+Merge all these data to one variable named data
+```{r}
+data<-cbind(subject,yLabels,reducedx)
+#Rename names of column 1 and 2
+names(data[1:2])<-c("subjectname","activity")
+```
+
+
 ##Step 5: From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+Change the subjectname to factor variable so that we can use tapply function to find mean of factors
+```{r changeSubjectNameToFactor}
+data$subjectname<-as.factor(data$subjectname)
+```
+
+Finding Mean
+```{r findMeanByFactor}
+#tapply(data,data$subjectname,mean)
+#tapply seems to work with only one column
+#newdata<-0
+#for(name in unique(data$name)){
+#    rowIndex<-which(data$subjectname == name)
+#    result<-colMeans(data[,rowIndex])
+#    newdata[name,]<-result
+#    newdata
+#}
+library(dplyr)
+newdata<-data %>% group_by(subjectname) %>% summarise_each(funs(mean))
+```
