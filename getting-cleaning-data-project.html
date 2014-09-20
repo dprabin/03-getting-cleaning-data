@@ -53,7 +53,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 
 <div id="getting-and-cleaning-data---course-project" class="section level1">
-<h1>#Getting and Cleaning Data - Course Project</h1>
+<h1>Getting and Cleaning Data - Course Project</h1>
 <div id="cleaning-human-activity-recognition-using-smartphones-dataset" class="section level2">
 <h2>Cleaning Human Activity Recognition Using Smartphones Dataset</h2>
 <p>The experiments have been carried out with a group of 30 volunteers within an age bracket of 19-48 years. Each person performed six activities (WALKING, WALKING_UPSTAIRS, WALKING_DOWNSTAIRS, SITTING, STANDING, LAYING) wearing a smartphone (Samsung Galaxy S II) on the waist. Using its embedded accelerometer and gyroscope, we captured 3-axial linear acceleration and 3-axial angular velocity at a constant rate of 50Hz. The experiments have been video-recorded to label the data manually. The obtained dataset has been randomly partitioned into two sets, where 70% of the volunteers was selected for generating the training data and 30% the test data.</p>
@@ -198,10 +198,25 @@ library(dplyr)</code></pre>
 ## The following objects are masked from 'package:base':
 ## 
 ##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>newdata&lt;-data %&gt;% group_by(subjectname) %&gt;% summarise_each(funs(mean))
-
+<pre class="r"><code>#Find mean by subjectname
+newdata&lt;-data %&gt;% group_by(subjectname) %&gt;% summarise_each(funs(mean))
 #now write this data to a file
-write.table(newdata,file=&quot;meandata_subject.txt&quot;,row.name=FALSE)</code></pre>
+write.table(newdata,file=&quot;meandata_subject.txt&quot;,row.name=FALSE)
+
+#Again, find mean by activity
+newdata&lt;-data %&gt;% group_by(yLabels) %&gt;% summarise_each(funs(mean))
+#now write this data to a file
+write.table(newdata,file=&quot;meandata_activities.txt&quot;,row.name=FALSE)
+
+#Again, find mean by subjectname and activity
+#for that, combine values of these 
+newcol&lt;-paste(subject,yLabels,sep=&quot;-&quot;)
+#now merge the new column with old column
+data&lt;-cbind(newcol,reducedx)
+#find mean by newcol
+newdata&lt;-data %&gt;% group_by(newcol) %&gt;% summarise_each(funs(mean))
+#now write this data to a file
+write.table(newdata,file=&quot;meandata_subject_activities.txt&quot;,row.name=FALSE)</code></pre>
 </div>
 </div>
 
