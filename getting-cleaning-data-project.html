@@ -75,8 +75,8 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 </ol>
 </div>
 </div>
-<div id="step-1-read-data-and-merge-them" class="section level2">
-<h2>Step 1: Read data and merge them</h2>
+<div id="step-1-read-data-and-merge-data" class="section level2">
+<h2>Step 1: Read data and merge data</h2>
 <div id="set-working-directory" class="section level3">
 <h3>Set Working Directory</h3>
 <pre class="r"><code>setwd(&quot;/users/MacBookAir/Movies/coursera/03 Getting and cleaning data/Course project/UCI HAR Dataset/&quot;)</code></pre>
@@ -84,109 +84,100 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="read-x-and-y-variables-for-training-and-testing" class="section level3">
 <h3>Read x and y variables for Training and Testing</h3>
 <p>The data sets are available in two different sets - training set and testing set. We will now read all the data sets to appropriate variables.</p>
-<pre class="r"><code>xtrain&lt;-read.table(&quot;./train/X_train.txt&quot;)
-ytrain&lt;-read.table(&quot;./train/y_train.txt&quot;)
-
-xtest&lt;-read.table(&quot;./test/X_test.txt&quot;)
-ytest&lt;-read.table(&quot;./test/y_test.txt&quot;)</code></pre>
+<pre class="r"><code>setwd(&quot;/users/MacBookAir/Movies/coursera/03 Getting and cleaning data/Course project/UCI HAR Dataset/&quot;)
+xtrain&lt;-read.table(&quot;train/X_train.txt&quot;)
+xtest&lt;-read.table(&quot;test/X_test.txt&quot;)
+#variable Names
+features&lt;-read.table(&quot;features.txt&quot;)
+#activity 
+ytrain&lt;-read.table(&quot;train/y_train.txt&quot;)
+ytest&lt;-read.table(&quot;test/y_test.txt&quot;)
+#activity Labels for the data above
+activityLabels&lt;-read.table(&quot;activity_labels.txt&quot;)
+#Read suubject from files as numbers
+subjectTrain&lt;-read.table(&quot;./train/subject_train.txt&quot;)
+subjectTest&lt;-read.table(&quot;./test/subject_test.txt&quot;)</code></pre>
 </div>
 <div id="merge-training-and-testing-data-to-x-and-y-variable" class="section level3">
 <h3>Merge training and testing data to x and y variable</h3>
-<p>We will now merge xtrain and xtest datasets to x variable and ytraiing and ytest datasets to y variable.</p>
+<p>We will now merge xtrain and xtest datasets to x variable and ytraiing and ytest datasets to y variable and subjectTrain and SubjectTest to subject variable.</p>
 <pre class="r"><code>x&lt;-rbind(xtrain,xtest)
-y&lt;-rbind(ytrain,ytest)</code></pre>
+y&lt;-rbind(ytrain,ytest)
+subject&lt;-rbind(subjectTrain,subjectTest)</code></pre>
 <p>With this, training and test variables for x and y are merged to x and y variables.</p>
-</div>
-</div>
-<div id="step-2-extract-only-mean-and-standard-deviation-values" class="section level2">
-<h2>Step 2: Extract only Mean and Standard Deviation values</h2>
-<div id="load-variable-names" class="section level3">
-<h3>load variable names</h3>
-<p>The variable names are stored in features.txt file.</p>
-<pre class="r"><code>features&lt;-read.table(&quot;features.txt&quot;)
-head(features)</code></pre>
-<pre><code>##   V1                V2
-## 1  1 tBodyAcc-mean()-X
-## 2  2 tBodyAcc-mean()-Y
-## 3  3 tBodyAcc-mean()-Z
-## 4  4  tBodyAcc-std()-X
-## 5  5  tBodyAcc-std()-Y
-## 6  6  tBodyAcc-std()-Z</code></pre>
 <p>The features table shows two columns. we don’t need the first column. We only need the second column as variable names. Also, the variable contains uppercase and lowercase characters. Change all to lowercase to avoid confusion.</p>
 <pre class="r"><code>features&lt;-tolower(features[,2])</code></pre>
 </div>
 <div id="apply-the-feature-name-labels-as-names-of-x-variable" class="section level3">
 <h3>Apply the feature name labels as names of x variable</h3>
-<pre class="r"><code>names(x)&lt;-features</code></pre>
+<pre class="r"><code>names(x)&lt;-features
+names(y)&lt;-&quot;activity&quot;
+names(subject)&lt;-&quot;subject&quot;</code></pre>
 </div>
+<div id="merge-the-three-variables-x-y-and-subject-to-one" class="section level3">
+<h3>Merge the three variables x y and subject to one</h3>
+<pre class="r"><code>data&lt;-cbind(y,subject,x)</code></pre>
+</div>
+</div>
+<div id="step-2-extract-only-mean-and-standard-deviation-values" class="section level2">
+<h2>Step 2: Extract only Mean and Standard Deviation values</h2>
 <div id="now-find-out-only-variables-that-are-mean-values-and-standard-deviation-values." class="section level3">
 <h3>Now find out only variables that are mean values and standard deviation values.</h3>
 <p>We want only the means or std outside the braces eg - mean(abcsum,efg) will count - sum(abcmean,abcstd) does not count as mean or std</p>
-<pre class="r"><code>meanStdColumns&lt;-grep(&quot;[m|M]ean\\(.*?\\)|[s|S]td\\(.*?\\)&quot;,names(x))
-# also the regex &quot;mean\\(\\)|std\\(\\)&quot; works as it is already lowercase
-length(meanStdColumns)</code></pre>
-<pre><code>## [1] 66</code></pre>
+<pre class="r"><code>meanStdColumns&lt;-grep(&quot;[m|M]ean\\(.*?\\)|[s|S]td\\(.*?\\)&quot;,names(data))
+# also the regex &quot;mean\\(\\)|std\\(\\)&quot; works as it is already lowercase</code></pre>
+<p>With this code, the meanStdColumns has missed activity and subject, so include these too in our final result. In our case, they are column 1 and 2 of data variable.</p>
+<pre class="r"><code>newColIndex&lt;-c(1,2,meanStdColumns)</code></pre>
 </div>
 <div id="extract-those-columns-to-new-variable" class="section level3">
 <h3>Extract those columns to new variable</h3>
-<pre class="r"><code>reducedx&lt;-x[,meanStdColumns]</code></pre>
-</div>
-<div id="write-the-reduced-data-to-new-file" class="section level3">
-<h3>Write the reduced data to new file</h3>
-<pre class="r"><code>#write.csv(reducedx,file=&quot;reducedx.csv&quot;)
-write.table(reducedx,file=&quot;reducedx.txt&quot;,row.name=FALSE)</code></pre>
+<pre class="r"><code>reduced&lt;-data[,newColIndex]</code></pre>
 </div>
 </div>
 <div id="step-3-use-descriptive-activity-names-to-name-the-activities-in-the-data-set" class="section level2">
 <h2>Step 3: Use descriptive activity names to name the activities in the data set</h2>
-<div id="read-activity-labels-from-the-file" class="section level3">
-<h3>Read Activity labels from the file</h3>
-<p>The activity labels are stored in the activity_labels.txt file.</p>
-<pre class="r"><code>activityLabels&lt;-read.table(&quot;activity_labels.txt&quot;)</code></pre>
-</div>
-<div id="replace-activities-in-variable-y-with-labels" class="section level3">
-<h3>Replace activities in variable y with labels</h3>
-<pre class="r"><code>#First create an empty yLabels
-yLabels&lt;-0
-#There are six activity labels so loop 6 times 
+<p>Now we will replace numbers in activity columns ###Replace activities in variable y with labels</p>
+<pre class="r"><code>#There are six activity labels so loop 6 times 
 #and replace y with  labels
 for(a in 1:6){
   #find a in y
-  ainy = which(y==a)
-  yLabels[ainy] &lt;- as.character(activityLabels[a,2])
+  aInData = which(reduced$activity==a)
+  reduced[aInData,1] &lt;- as.character(activityLabels[a,2])
 }</code></pre>
 </div>
-</div>
-<div id="step-4-appropriately-labels-the-data-set-with-descriptive-variable-names." class="section level2">
-<h2>Step 4: Appropriately labels the data set with descriptive variable names.</h2>
-<p>Read subject numbers from training and testing dataset</p>
-<pre class="r"><code>subjectTrain&lt;-read.table(&quot;./train/subject_train.txt&quot;)
-subjectTest&lt;-read.table(&quot;./test/subject_test.txt&quot;)</code></pre>
-<p>Merge these to single variable</p>
-<pre class="r"><code>subject&lt;-rbind(subjectTrain,subjectTest)</code></pre>
+<div id="step-4-appropriately-label-the-data-set-with-descriptive-variable-names." class="section level2">
+<h2>Step 4: Appropriately label the data set with descriptive variable names.</h2>
 <p>Now change the number to labels like Subject1, Subject2…</p>
-<pre class="r"><code>subject[,1]&lt;-paste(&quot;Subject-&quot;,as.character(subject[,1]),sep=&quot;&quot;)
-#rename column name to subjectname
-names(subject)&lt;-&quot;subjectname&quot;</code></pre>
-<p>Merge all these data to one variable named data</p>
-<pre class="r"><code>data&lt;-cbind(subject,yLabels,reducedx)
-#Rename names of column 1 and 2
-names(data[1:2])&lt;-c(&quot;subjectname&quot;,&quot;activity&quot;)</code></pre>
+<pre class="r"><code>reduced[,2]&lt;-paste(&quot;Subject-&quot;,as.character(reduced[,2]),sep=&quot;&quot;)</code></pre>
+<div id="clean-and-apply-variable-names" class="section level3">
+<h3>Clean and apply variable Names</h3>
+<pre class="r"><code>varName&lt;-colnames(reduced)
+#remove () from varName
+varName&lt;-gsub(&quot;\\()&quot;,&quot;&quot;,varName)
+#replace t with Time and f with Frequency
+varName&lt;-gsub(&quot;^(t)&quot;,&quot;Time&quot;,varName)
+varName&lt;-gsub(&quot;^(f)&quot;,&quot;Frequency&quot;,varName)
+#Capitalize initial letters of body, gravity, accleration, jerk, mag
+varName&lt;-gsub(&quot;[bB]ody&quot;,&quot;Body&quot;,varName)
+varName&lt;-gsub(&quot;[gG]ravity&quot;,&quot;Gravity&quot;,varName)
+varName&lt;-gsub(&quot;[aA]cc&quot;,&quot;Accleration&quot;,varName)
+varName&lt;-gsub(&quot;[jJ]erk&quot;,&quot;Jerk&quot;,varName)
+varName&lt;-gsub(&quot;[mM]ag&quot;,&quot;Magnitude&quot;,varName)
+
+#Now Apply the variable names to colnames
+colnames(reduced)&lt;-varName</code></pre>
+</div>
 </div>
 <div id="step-5-from-the-data-set-in-step-4-creates-a-second-independent-tidy-data-set-with-the-average-of-each-variable-for-each-activity-and-each-subject." class="section level2">
 <h2>Step 5: From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.</h2>
 <p>Change the subjectname to factor variable so that we can use tapply function to find mean of factors</p>
-<pre class="r"><code>data$subjectname&lt;-as.factor(data$subjectname)</code></pre>
+<pre class="r"><code>data$subject&lt;-as.factor(data$subject)</code></pre>
 <p>Finding Mean</p>
-<pre class="r"><code>#tapply(data,data$subjectname,mean)
-#tapply seems to work with only one column
-#newdata&lt;-0
-#for(name in unique(data$name)){
-#    rowIndex&lt;-which(data$subjectname == name)
-#    result&lt;-colMeans(data[,rowIndex])
-#    newdata[name,]&lt;-result
-#    newdata
-#}
+<pre class="r"><code>#with aggregate function (this gives some warnings)
+#by subject and activity
+#newdata1&lt;-aggregate(reduced,by=list(reduced$subject,reduced$activity),mean)[,-c(3,4)]
+
+
 library(dplyr)</code></pre>
 <pre><code>## 
 ## Attaching package: 'dplyr'
@@ -198,25 +189,34 @@ library(dplyr)</code></pre>
 ## The following objects are masked from 'package:base':
 ## 
 ##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>#Find mean by subjectname
-newdata&lt;-data %&gt;% group_by(subjectname) %&gt;% summarise_each(funs(mean))
-#now write this data to a file
-write.table(newdata,file=&quot;meandata_subject.txt&quot;,row.name=FALSE)
-
-#Again, find mean by activity
-newdata&lt;-data %&gt;% group_by(yLabels) %&gt;% summarise_each(funs(mean))
-#now write this data to a file
-write.table(newdata,file=&quot;meandata_activities.txt&quot;,row.name=FALSE)
-
-#Again, find mean by subjectname and activity
+<pre class="r"><code>#Again, find mean by subjectname and activity with dplyr
 #for that, combine values of these 
-newcol&lt;-paste(subject,yLabels,sep=&quot;-&quot;)
-#now merge the new column with old column
-data&lt;-cbind(newcol,reducedx)
+newcol&lt;-paste(reduced$subject,reduced$activity,sep=&quot;-&quot;)
+#now merge the new column with old column 
+#and remove unnecessary and old columns
+data1&lt;-cbind(newcol,reduced)[,-c(2,3)]
 #find mean by newcol
-newdata&lt;-data %&gt;% group_by(newcol) %&gt;% summarise_each(funs(mean))
+newdata&lt;-data1 %&gt;% group_by(newcol) %&gt;% summarise_each(funs(mean))
 #now write this data to a file
-write.table(newdata,file=&quot;meandata_subject_activities.txt&quot;,row.name=FALSE)</code></pre>
+write.table(newdata,file=&quot;tidydata_mean_subject-activities.txt&quot;,row.name=FALSE)
+
+#compare this to original data
+dim(data)</code></pre>
+<pre><code>## [1] 10299   563</code></pre>
+<pre class="r"><code>dim(reduced)</code></pre>
+<pre><code>## [1] 10299    68</code></pre>
+<pre class="r"><code>#cleaned and reduced data
+dim(newdata)</code></pre>
+<pre><code>## [1] 180  67</code></pre>
+<pre class="r"><code>###
+a&lt;-length(unique(reduced$subject))
+b&lt;-length(unique(reduced$activity))
+c&lt;-length(reduced)-1
+
+a*b</code></pre>
+<pre><code>## [1] 180</code></pre>
+<pre class="r"><code>c</code></pre>
+<pre><code>## [1] 67</code></pre>
 </div>
 </div>
 

@@ -20,8 +20,7 @@ Here are the data for the project: <https://d396qusza40orc.cloudfront.net/getdat
 4. Appropriately labels the data set with descriptive variable names. 
 5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
 
-##Step 1: Read data and merge them
-
+##Step 1: Read data and merge data
 ###Set Working Directory 
 ```{r setworkingdirectory}
 setwd("/users/MacBookAir/Movies/coursera/03 Getting and cleaning data/Course project/UCI HAR Dataset/")
@@ -29,114 +28,108 @@ setwd("/users/MacBookAir/Movies/coursera/03 Getting and cleaning data/Course pro
 
 ###Read x and y variables for Training and Testing 
 The data sets are available in two different sets - training set and testing set. We will now read all the data sets to appropriate variables.
-```{r readtraintestxy}
-xtrain<-read.table("./train/X_train.txt")
-ytrain<-read.table("./train/y_train.txt")
 
-xtest<-read.table("./test/X_test.txt")
-ytest<-read.table("./test/y_test.txt")
+```{r readTrainTestxy, cache=TRUE}
+setwd("/users/MacBookAir/Movies/coursera/03 Getting and cleaning data/Course project/UCI HAR Dataset/")
+xtrain<-read.table("train/X_train.txt")
+xtest<-read.table("test/X_test.txt")
+#variable Names
+features<-read.table("features.txt")
+#activity 
+ytrain<-read.table("train/y_train.txt")
+ytest<-read.table("test/y_test.txt")
+#activity Labels for the data above
+activityLabels<-read.table("activity_labels.txt")
+#Read suubject from files as numbers
+subjectTrain<-read.table("./train/subject_train.txt")
+subjectTest<-read.table("./test/subject_test.txt")
 ```
 
 ###Merge training and testing data to x and y variable
-We will now merge xtrain and xtest datasets to x variable and ytraiing and ytest datasets to y variable.
-```{r combinetesttraintoxy}
+We will now merge xtrain and xtest datasets to x variable and ytraiing and ytest datasets to y variable and subjectTrain and SubjectTest to subject variable.
+```{r combineTestTrainToxy}
 x<-rbind(xtrain,xtest)
 y<-rbind(ytrain,ytest)
+subject<-rbind(subjectTrain,subjectTest)
 ```
 With this, training and test variables for x and y are merged to x and y variables.
 
-##Step 2: Extract only Mean and Standard Deviation values
-
-###load variable names
-The variable names are stored in features.txt file.
-```{r readVariableNames}
-features<-read.table("features.txt")
-head(features)
-```
 The features table shows two columns. we don't need the first column. We only need the second column as variable names. Also, the variable contains uppercase and lowercase characters. Change all to lowercase to avoid confusion.
 ```{r convertfeaturesvectortolower}
 features<-tolower(features[,2])
 ```
-  
-
 
 ###Apply the feature name labels as names of x variable
 ```{r giveVariablenamesTox}
 names(x)<-features
+names(y)<-"activity"
+names(subject)<-"subject"
+```
+
+###Merge the three variables x y and subject to one
+```{r mergeVariablesXYandSubject}
+data<-cbind(y,subject,x)
 ```
 
 
-
+##Step 2: Extract only Mean and Standard Deviation values
 
 ###Now find out only variables that are mean values and standard deviation values.
 We want only the means or std outside the braces eg
  - mean(abcsum,efg) will count
  - sum(abcmean,abcstd) does not count as mean or std
 ```{r meanVariableFind}
-meanStdColumns<-grep("[m|M]ean\\(.*?\\)|[s|S]td\\(.*?\\)",names(x))
+meanStdColumns<-grep("[m|M]ean\\(.*?\\)|[s|S]td\\(.*?\\)",names(data))
 # also the regex "mean\\(\\)|std\\(\\)" works as it is already lowercase
-length(meanStdColumns)
+```
+
+With this code, the meanStdColumns has missed activity and subject, so include these too in our final result. In our case, they are column 1 and 2 of data variable.
+```{r addColumns1And2WhichWasMissedDuringFiltering}
+newColIndex<-c(1,2,meanStdColumns)
 ```
 
 ###Extract those columns to new variable
 ```{r extractMeanStdColumns}
-reducedx<-x[,meanStdColumns]
-```
-
-###Write the reduced data to new file
-```{r writeDataToFile}
-#write.csv(reducedx,file="reducedx.csv")
-write.table(reducedx,file="reducedx.txt",row.name=FALSE)
+reduced<-data[,newColIndex]
 ```
 
 
 ##Step 3: Use descriptive activity names to name the activities in the data set
-
-###Read Activity labels from the file
-The activity labels are stored in the activity_labels.txt file.
-```{r readActivityLabelsFromFile}
-activityLabels<-read.table("activity_labels.txt")
-```
-
-
+Now we will replace numbers in activity columns
 ###Replace activities in variable y with labels
 ```{r replaceActivityLabessIny}
-#First create an empty yLabels
-yLabels<-0
 #There are six activity labels so loop 6 times 
 #and replace y with  labels
 for(a in 1:6){
   #find a in y
-  ainy = which(y==a)
-  yLabels[ainy] <- as.character(activityLabels[a,2])
+  aInData = which(reduced$activity==a)
+  reduced[aInData,1] <- as.character(activityLabels[a,2])
 }
 ```
 
-##Step 4: Appropriately labels the data set with descriptive variable names. 
-
-Read subject numbers from training and testing dataset
-```{r}
-subjectTrain<-read.table("./train/subject_train.txt")
-subjectTest<-read.table("./test/subject_test.txt")
-```
-
-Merge these to single variable
-```{r}
-subject<-rbind(subjectTrain,subjectTest)
-```
+##Step 4: Appropriately label the data set with descriptive variable names. 
 
 Now change the number to labels like Subject1, Subject2...
-```{r}
-subject[,1]<-paste("Subject-",as.character(subject[,1]),sep="")
-#rename column name to subjectname
-names(subject)<-"subjectname"
+```{r changeSubjectNumberToLabel}
+reduced[,2]<-paste("Subject-",as.character(reduced[,2]),sep="")
 ```
+###Clean and apply variable Names
+```{r cleanData}
+varName<-colnames(reduced)
+#remove () from varName
+varName<-gsub("\\()","",varName)
+#replace t with Time and f with Frequency
+varName<-gsub("^(t)","Time",varName)
+varName<-gsub("^(f)","Frequency",varName)
+#Capitalize initial letters of body, gravity, accleration, jerk, mag
+varName<-gsub("[bB]ody","Body",varName)
+varName<-gsub("[gG]ravity","Gravity",varName)
+varName<-gsub("[aA]cc","Accleration",varName)
+varName<-gsub("[jJ]erk","Jerk",varName)
+varName<-gsub("[mM]ag","Magnitude",varName)
 
-Merge all these data to one variable named data
-```{r}
-data<-cbind(subject,yLabels,reducedx)
-#Rename names of column 1 and 2
-names(data[1:2])<-c("subjectname","activity")
+#Now Apply the variable names to colnames
+colnames(reduced)<-varName
 ```
 
 
@@ -144,40 +137,35 @@ names(data[1:2])<-c("subjectname","activity")
 
 Change the subjectname to factor variable so that we can use tapply function to find mean of factors
 ```{r changeSubjectNameToFactor}
-data$subjectname<-as.factor(data$subjectname)
+data$subject<-as.factor(data$subject)
 ```
 
 Finding Mean
 ```{r findMeanByFactor}
-#tapply(data,data$subjectname,mean)
-#tapply seems to work with only one column
-#newdata<-0
-#for(name in unique(data$name)){
-#    rowIndex<-which(data$subjectname == name)
-#    result<-colMeans(data[,rowIndex])
-#    newdata[name,]<-result
-#    newdata
-#}
+#with aggregate function (this gives some warnings)
+#by subject and activity
+#newdata1<-aggregate(reduced,by=list(reduced$subject,reduced$activity),mean)[,-c(3,4)]
+
+
 library(dplyr)
-
-#Find mean by subjectname
-newdata<-data %>% group_by(subjectname) %>% summarise_each(funs(mean))
-#now write this data to a file
-write.table(newdata,file="meandata_subject.txt",row.name=FALSE)
-
-#Again, find mean by activity
-newdata<-data %>% group_by(yLabels) %>% summarise_each(funs(mean))
-#now write this data to a file
-write.table(newdata,file="meandata_activities.txt",row.name=FALSE)
-
-#Again, find mean by subjectname and activity
+#Again, find mean by subjectname and activity with dplyr
 #for that, combine values of these 
-newcol<-paste(subject,yLabels,sep="-")
-#now merge the new column with old column
-data<-cbind(newcol,reducedx)
+newcol<-paste(reduced$subject,reduced$activity,sep="-")
+#now merge the new column with old column 
+#and remove unnecessary and old columns
+data1<-cbind(newcol,reduced)[,-c(2,3)]
 #find mean by newcol
-newdata<-data %>% group_by(newcol) %>% summarise_each(funs(mean))
+newdata<-data1 %>% group_by(newcol) %>% summarise_each(funs(mean))
 #now write this data to a file
-write.table(newdata,file="meandata_subject_activities.txt",row.name=FALSE)
+write.table(newdata,file="tidydata_mean_subject-activities.txt",row.name=FALSE)
 
+#compare this to original data
+dim(data)
+dim(reduced)
+#cleaned and reduced data
+dim(newdata)
+###
+#a<-length(unique(reduced$subject))
+#b<-length(unique(reduced$activity))
+#a*b=180
 ```
