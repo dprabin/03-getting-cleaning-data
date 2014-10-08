@@ -191,32 +191,22 @@ library(dplyr)</code></pre>
 ##     intersect, setdiff, setequal, union</code></pre>
 <pre class="r"><code>#Again, find mean by subjectname and activity with dplyr
 #for that, combine values of these 
-newcol&lt;-paste(reduced$subject,reduced$activity,sep=&quot;-&quot;)
+subjectAndActivities&lt;-paste(reduced$subject,reduced$activity,sep=&quot;-&quot;)
 #now merge the new column with old column 
 #and remove unnecessary and old columns
-data1&lt;-cbind(newcol,reduced)[,-c(2,3)]
+data1&lt;-cbind(subjectAndActivities,reduced)[,-c(2,3)]
 #find mean by newcol
-newdata&lt;-data1 %&gt;% group_by(newcol) %&gt;% summarise_each(funs(mean))
+newdata&lt;-data1 %&gt;% group_by(subjectAndActivities) %&gt;% summarise_each(funs(mean))
 #now write this data to a file
 write.table(newdata,file=&quot;tidydata_mean_subject-activities.txt&quot;,row.name=FALSE)
-
-#compare this to original data
+#write.table(colnames(newdata),file=&quot;codebook.md&quot;,row.name=FALSE)
+#original data
 dim(data)</code></pre>
 <pre><code>## [1] 10299   563</code></pre>
 <pre class="r"><code>dim(reduced)</code></pre>
 <pre><code>## [1] 10299    68</code></pre>
-<pre class="r"><code>#cleaned and reduced data
-dim(newdata)</code></pre>
+<pre class="r"><code>dim(newdata)</code></pre>
 <pre><code>## [1] 180  67</code></pre>
-<pre class="r"><code>###
-a&lt;-length(unique(reduced$subject))
-b&lt;-length(unique(reduced$activity))
-c&lt;-length(reduced)-1
-
-a*b</code></pre>
-<pre><code>## [1] 180</code></pre>
-<pre class="r"><code>c</code></pre>
-<pre><code>## [1] 67</code></pre>
 </div>
 </div>
 

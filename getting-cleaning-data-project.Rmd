@@ -150,22 +150,18 @@ Finding Mean
 library(dplyr)
 #Again, find mean by subjectname and activity with dplyr
 #for that, combine values of these 
-newcol<-paste(reduced$subject,reduced$activity,sep="-")
+subjectAndActivities<-paste(reduced$subject,reduced$activity,sep="-")
 #now merge the new column with old column 
 #and remove unnecessary and old columns
-data1<-cbind(newcol,reduced)[,-c(2,3)]
+data1<-cbind(subjectAndActivities,reduced)[,-c(2,3)]
 #find mean by newcol
-newdata<-data1 %>% group_by(newcol) %>% summarise_each(funs(mean))
+newdata<-data1 %>% group_by(subjectAndActivities) %>% summarise_each(funs(mean))
 #now write this data to a file
 write.table(newdata,file="tidydata_mean_subject-activities.txt",row.name=FALSE)
-
-#compare this to original data
+#write.table(colnames(newdata),file="codebook.md",row.name=FALSE)
+#original data
 dim(data)
 dim(reduced)
-#cleaned and reduced data
 dim(newdata)
-###
-#a<-length(unique(reduced$subject))
-#b<-length(unique(reduced$activity))
-#a*b=180
+
 ```
